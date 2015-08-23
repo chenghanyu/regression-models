@@ -1,0 +1,154 @@
+---
+title: "Regression Models Course Project: Data Analysis on Motor Trend"
+author: "Cheng-Han Yu"
+date: "August 19, 2015"
+output:
+  html_document:
+    fig_height: 5
+    fig_width: 8
+    fig_caption: yes
+    keep_tex: yes
+  pdf_document:
+    fig_height: 5
+    fig_width: 8
+    fig_caption: yes
+    keep_tex: yes
+---
+## Executive Summary
+We examine `mtcars` data set to answer the following questions:
+
+* Is an automatic or manual transmission better for MPG?
+* Quantify the MPG difference between automatic and manual transmissions.
+
+We first summarize the relationships between variables, and then fit a linear regression model that has the smallest BIC and the largest adjusted $R^2$, followed by residual analysis and diagnostics. Wither with or wothout interaction, our model tells us a manual transmission is better for MPG, and no-pattern residual plots are indications for good model fitting.  
+
+```{r, echo = FALSE, results='hide'}
+data(mtcars); str(mtcars) # check the structure of data
+mtcars[, c(2, 8:11)] <- lapply(mtcars[, c(2, 8:11)], as.factor) # convert to factor
+```
+
+## Explonatory Data Analysis
+The `mtcars` data set is an R data frame with 32 observations on 11 variables. Figure 1 in Appendix gives us a general picture of the variables including their histogram, scatter plots and correlation between variables. Marginally manual transmission seems to have higher MPG than automatic transmission.
+
+## Regression Models and Subset Selection
+
+We first consider two naive models, the model including all predictors (`fit.full`) and the one with variable `am` only (`fit.am`). 
+```{r}
+fit.full <- lm(mpg ~ ., data = mtcars); round(summary(fit.full)$coef[, 4][-1], 2) # p-value
+```
+```{r}
+fit.am <- lm(mpg ~ am, data = mtcars); summary(fit.am)$coef[2, ]
+```
+In the full model, all coefficients are not significant at 5\% significance level, although is has large adjusted $R^2 =$ `r round(summary(fit.full)$adj.r.squared, 2)`. Fitting many correlated variables results in *multicollinearity* and *overfitting* with inflated estimated standard error. On the contrary, the coefficients of the `am`-only model are significantly different from zero, saying that on average, a manual transmitted car has 7.245 MPG higher than an automatic transmitted car. However, the model has small adjusted $R^2 =$ `r round(summary(fit.am)$adj.r.squared, 2)`, impling small explanatory power for MPG.
+
+To do variable selection, we use forward and backward stepwise slection with two criteria AIC ($-2\log L(M) + 2k$) and BIC ($-2\log L(M) + k\log(n)$), where $L(M)$ is the maximum of the likelihood function of model $M$ and $k$ is the number of parameters in $M$ and $n$ is the number of observations.
+
+Forward stepwise selection starts with a intercept-only model, and then adds predictors to the model, one at the time, until all of the predictors are in the model. At each step the variable that gives the greatest *additional* improvement to the fit is added to the model. Backward method, on the other hand, begins with the full model, and then removes the least useful covariate, one at the time.
+
+There are four models `for.aic`, `for.bic`, `back.aic` and `back.bic` to be considered, each of which is the best model with the smallest AIC or BIC. 
+
+```{r forward}
+for.aic <- step(lm(mpg ~ 1, data = mtcars), direction = "forward", 
+                scope = formula(fit.full), k = 2, trace = 0) # forward AIC
+for.bic <- step(lm(mpg ~ 1, data=mtcars), direction = "forward", 
+                scope = formula(fit.full), k = log(32), trace = 0) # forward BIC
+back.aic <- step(fit.full, direction = "backward", k = 2, trace = 0) # backward AIC
+back.bic <- step(fit.full, direction = "backward", k = log(32), trace = 0) # backward BIC
+```
+
+```{r, include=FALSE}
+rownames(summary(for.aic)$coef)[-1]
+rownames(summary(for.bic)$coef)[-1]
+rownames(summary(back.aic)$coef)[-1]
+rownames(summary(back.bic)$coef)[-1]
+```
+
+```{r, echo=FALSE, results='hide'}
+c(back.aicRsq= summary(back.aic)$adj.r.squared, back.bicRsq= summary(back.bic)$adj.r.squared, 
+  for.aicRsq = summary(for.aic)$adj.r.squared, for.bicRsq = summary(for.bic)$adj.r.squared)
+```
+```{r}
+# back.aicRsq back.bicRsq  for.aicRsq  for.bicRsq 
+#   0.8335561   0.8335561   0.8263446   0.8185189 
+```
+
+
+```{r echo=FALSE}
+summary(back.bic)$coef[, c(1, 4)]
+```
+
+Since the model `back.bic` has the largest adjusted $R^2 =$ `r round(summary(back.bic)$adj.r.squared, 3)`, the model including `wt`, `qsec`, and `am` has the most explanatory power for `mpg`. Under this model, a mamual transmission car, on average, has 2.936 miles per gallon more than an automatic transmission car, holding values of weights and 1/4 mile time constant.
+
+We then fit four possible interaction models `fit.int`, `fit.int.aq`, `fit.int.aw` and `fit.int.wq` to check if any interaction is needed to be in the model.
+
+```{r inter}
+fit.int <- summary(lm(mpg ~ wt * qsec * am, data = mtcars))
+fit.int.aq <- summary(lm(mpg ~ wt + qsec * am, data = mtcars))
+fit.int.aw <- summary(lm(mpg ~ qsec + wt * am, data = mtcars))
+fit.int.wq <- summary(lm(mpg ~ am + qsec * wt, data = mtcars))
+```
+
+```{r, include=FALSE}
+rownames(fit.int$coef[fit.int$coef[, 4] < 0.05, ])
+rownames(fit.int.aq$coef[fit.int.aq$coef[, 4] < 0.05, ])
+rownames(fit.int.aw$coef[fit.int.aw$coef[, 4] < 0.05, ])
+rownames(fit.int.wq$coef[fit.int.wq$coef[, 4] < 0.05, ])
+```
+
+```{r, echo=FALSE}
+c(int_Rsq = fit.int$adj.r.squared, int.aq_Rsq = fit.int.aq$adj.r.squared, 
+  int.aw_Rsq = fit.int.aw$adj.r.squared, int.wq_Rsq = fit.int.wq$adj.r.squared)
+```
+
+Since model `fit.int.aw` has the largest adjusted $R^2 =$ `r round(fit.int.aw$adj.r.squared, 3)`, the model **`mpg = 9.723 + (1.017)qsec + (-2.937)wt + (14.079)am + (-4.141)wt*am`** is our final model. When `am = 0`, the slope of `wt` is `r -2.937` and the intercept is `r 9.723`. When `am = 1`, the slope of `wt` is `r -2.937-4.141` and the intercept is `r 9.723+14.079`. In term of uncertainty, the 95\% confidence interval for the coefficients are shown below.
+
+```{r}
+fit <- lm(mpg ~ qsec + wt * am, data = mtcars)
+t(confint(fit))
+```
+
+
+## Residual Diagnostics
+Some plots for residual diagnostics are shown in Figure 2. There is no particular pattern in residuals vs fitted, scale-location, and residuals vs leverage plots. For QQ-plot, it seems that the residual is a little bit right skewed, but it still can be seen as normal from Shapiro-Wilk normality test. 
+
+We use $2*k/n$ as a threshold for hat values, and there are four high leverage points, but according to `dfbeta()`, they are not so influential to our model. 
+
+```{r}
+shapiro.test(fit$res)
+round(hatvalues(fit)[hatvalues(fit) > 2*5/32], 2) # high leverage
+round(dfbeta(fit)[which(hatvalues(fit) > 2*5/32), ], 2) # check influence 
+```
+
+In sum, our model fit the data quite well. Although there are some high leverage points, they does not affect the model much. We may use this model to do inference and prediction as long as we pay attention to those data points with careful explanation. 
+
+## Appendix
+```{r, include=FALSE}
+panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...) {
+    usr <- par("usr"); on.exit(par(usr))
+    par(usr = c(0, 1, 0, 1))
+    r <- abs(cor(x, y))
+    txt <- format(c(r, 0.123456789), digits = digits)[1]
+    txt <- paste0(prefix, txt)
+    if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
+    text(0.5, 0.5, txt, cex = sqrt(cex.cor * r * 10) + 0.5)
+}
+panel.hist <- function(x, ...) {
+    usr <- par("usr"); on.exit(par(usr))
+    par(usr = c(usr[1:2], 0, 1.5) )
+    h <- hist(x, plot = FALSE)
+    breaks <- h$breaks; nB <- length(breaks)
+    y <- h$counts; y <- y/max(y)
+    rect(breaks[-nB], 0, breaks[-1], y, col = "cyan", ...)
+}
+```
+
+```{r, echo = FALSE, fig.height=12, fig.width=12, fig.cap="Figure 1: Decriptive Summary of Variables"}
+data(mtcars)
+pairs(mtcars, lower.panel = panel.smooth, upper.panel = panel.cor,
+      diag.panel = panel.hist, cex = 0.5, pch = 19, cex.axis = 1.5)
+```
+
+```{r, echo = FALSE, fig.height=8, fig.width=12, fig.cap="Figure 2: Residual Diagnostics"}
+par(mfrow = c(2,2))
+plot(fit <- lm(mpg ~ qsec + wt * am, data = mtcars))
+```

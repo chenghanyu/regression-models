@@ -1,0 +1,337 @@
+\documentclass[]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+    \usepackage{xltxtra,xunicode}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Mapping=tex-text,Scale=MatchLowercase}
+  \newcommand{\euro}{€}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{{#1}}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{{#1}}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{{#1}}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{{#1}}}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{{#1}}}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{{#1}}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{{#1}}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{{#1}}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{{#1}}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{{#1}}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{{#1}}}
+\newcommand{\RegionMarkerTok}[1]{{#1}}
+\newcommand{\ErrorTok}[1]{\textbf{{#1}}}
+\newcommand{\NormalTok}[1]{{#1}}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\ifxetex
+  \usepackage[setpagesize=false, % page size defined by xetex
+              unicode=false, % unicode breaks when used with xetex
+              xetex]{hyperref}
+\else
+  \usepackage[unicode=true]{hyperref}
+\fi
+\hypersetup{breaklinks=true,
+            bookmarks=true,
+            pdfauthor={Cheng-Han Yu},
+            pdftitle={Regression Models Course Project: Data Analysis on Motor Trend},
+            colorlinks=true,
+            citecolor=blue,
+            urlcolor=blue,
+            linkcolor=magenta,
+            pdfborder={0 0 0}}
+\urlstyle{same}  % don't use monospace font for urls
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\setcounter{secnumdepth}{0}
+
+%%% Use protect on footnotes to avoid problems with footnotes in titles
+\let\rmarkdownfootnote\footnote%
+\def\footnote{\protect\rmarkdownfootnote}
+
+%%% Change title format to be more compact
+\usepackage{titling}
+\setlength{\droptitle}{-2em}
+  \title{Regression Models Course Project: Data Analysis on Motor Trend}
+  \pretitle{\vspace{\droptitle}\centering\huge}
+  \posttitle{\par}
+  \author{Cheng-Han Yu}
+  \preauthor{\centering\large\emph}
+  \postauthor{\par}
+  \predate{\centering\large\emph}
+  \postdate{\par}
+  \date{August 19, 2015}
+
+
+
+
+\begin{document}
+
+\maketitle
+
+
+\subsection{Executive Summary}\label{executive-summary}
+
+We examine \texttt{mtcars} data set to answer the following questions:
+
+\begin{itemize}
+\itemsep1pt\parskip0pt\parsep0pt
+\item
+  Is an automatic or manual transmission better for MPG?
+\item
+  Quantify the MPG difference between automatic and manual
+  transmissions.
+\end{itemize}
+
+We first summarize the relationships between variables, and then fit a
+linear regression model that has the smallest BIC and the largest
+adjusted \(R^2\), followed by residual analysis and diagnostics. Wither
+with or wothout interaction, our model tells us a manual transmission is
+better for MPG, and no-pattern residual plots are indications for good
+model fitting.
+
+\subsection{Explonatory Data Analysis}\label{explonatory-data-analysis}
+
+The \texttt{mtcars} data set is an R data frame with 32 observations on
+11 variables. Figure 1 in Appendix gives us a general picture of the
+variables including their histogram, scatter plots and correlation
+between variables. Marginally manual transmission seems to have higher
+MPG than automatic transmission.
+
+\subsection{Regression Models and Subset
+Selection}\label{regression-models-and-subset-selection}
+
+We first consider two naive models, the model including all predictors
+(\texttt{fit.full}) and the one with variable \texttt{am} only
+(\texttt{fit.am}).
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{fit.full <-}\StringTok{ }\KeywordTok{lm}\NormalTok{(mpg ~}\StringTok{ }\NormalTok{., }\DataTypeTok{data =} \NormalTok{mtcars); }\KeywordTok{round}\NormalTok{(}\KeywordTok{summary}\NormalTok{(fit.full)$coef[, }\DecValTok{4}\NormalTok{][-}\DecValTok{1}\NormalTok{], }\DecValTok{2}\NormalTok{) }\CommentTok{# p-value}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  cyl6  cyl8  disp    hp  drat    wt  qsec   vs1   am1 gear4 gear5 carb2 
+##  0.40  0.96  0.28  0.09  0.64  0.09  0.70  0.51  0.71  0.77  0.51  0.68 
+## carb3 carb4 carb6 carb8 
+##  0.50  0.81  0.49  0.40
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{fit.am <-}\StringTok{ }\KeywordTok{lm}\NormalTok{(mpg ~}\StringTok{ }\NormalTok{am, }\DataTypeTok{data =} \NormalTok{mtcars); }\KeywordTok{summary}\NormalTok{(fit.am)$coef[}\DecValTok{2}\NormalTok{, ]}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##     Estimate   Std. Error      t value     Pr(>|t|) 
+## 7.2449392713 1.7644216316 4.1061269831 0.0002850207
+\end{verbatim}
+
+In the full model, all coefficients are not significant at 5\%
+significance level, although is has large adjusted \(R^2 =\) 0.78.
+Fitting many correlated variables results in \emph{multicollinearity}
+and \emph{overfitting} with inflated estimated standard error. On the
+contrary, the coefficients of the \texttt{am}-only model are
+significantly different from zero, saying that on average, a manual
+transmitted car has 7.245 MPG higher than an automatic transmitted car.
+However, the model has small adjusted \(R^2 =\) 0.34, impling small
+explanatory power for MPG.
+
+To do variable selection, we use forward and backward stepwise slection
+with two criteria AIC (\(-2\log L(M) + 2k\)) and BIC
+(\(-2\log L(M) + k\log(n)\)), where \(L(M)\) is the maximum of the
+likelihood function of model \(M\) and \(k\) is the number of parameters
+in \(M\) and \(n\) is the number of observations.
+
+Forward stepwise selection starts with a intercept-only model, and then
+adds predictors to the model, one at the time, until all of the
+predictors are in the model. At each step the variable that gives the
+greatest \emph{additional} improvement to the fit is added to the model.
+Backward method, on the other hand, begins with the full model, and then
+removes the least useful covariate, one at the time.
+
+There are four models \texttt{for.aic}, \texttt{for.bic},
+\texttt{back.aic} and \texttt{back.bic} to be considered, each of which
+is the best model with the smallest AIC or BIC.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{for.aic <-}\StringTok{ }\KeywordTok{step}\NormalTok{(}\KeywordTok{lm}\NormalTok{(mpg ~}\StringTok{ }\DecValTok{1}\NormalTok{, }\DataTypeTok{data =} \NormalTok{mtcars), }\DataTypeTok{direction =} \StringTok{"forward"}\NormalTok{, }
+                \DataTypeTok{scope =} \KeywordTok{formula}\NormalTok{(fit.full), }\DataTypeTok{k =} \DecValTok{2}\NormalTok{, }\DataTypeTok{trace =} \DecValTok{0}\NormalTok{) }\CommentTok{# forward AIC}
+\NormalTok{for.bic <-}\StringTok{ }\KeywordTok{step}\NormalTok{(}\KeywordTok{lm}\NormalTok{(mpg ~}\StringTok{ }\DecValTok{1}\NormalTok{, }\DataTypeTok{data=}\NormalTok{mtcars), }\DataTypeTok{direction =} \StringTok{"forward"}\NormalTok{, }
+                \DataTypeTok{scope =} \KeywordTok{formula}\NormalTok{(fit.full), }\DataTypeTok{k =} \KeywordTok{log}\NormalTok{(}\DecValTok{32}\NormalTok{), }\DataTypeTok{trace =} \DecValTok{0}\NormalTok{) }\CommentTok{# forward BIC}
+\NormalTok{back.aic <-}\StringTok{ }\KeywordTok{step}\NormalTok{(fit.full, }\DataTypeTok{direction =} \StringTok{"backward"}\NormalTok{, }\DataTypeTok{k =} \DecValTok{2}\NormalTok{, }\DataTypeTok{trace =} \DecValTok{0}\NormalTok{) }\CommentTok{# backward AIC}
+\NormalTok{back.bic <-}\StringTok{ }\KeywordTok{step}\NormalTok{(fit.full, }\DataTypeTok{direction =} \StringTok{"backward"}\NormalTok{, }\DataTypeTok{k =} \KeywordTok{log}\NormalTok{(}\DecValTok{32}\NormalTok{), }\DataTypeTok{trace =} \DecValTok{0}\NormalTok{) }\CommentTok{# backward BIC}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# back.aicRsq back.bicRsq  for.aicRsq  for.bicRsq }
+\CommentTok{#   0.8335561   0.8335561   0.8263446   0.8185189 }
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##              Estimate     Pr(>|t|)
+## (Intercept)  9.617781 1.779152e-01
+## wt          -3.916504 6.952711e-06
+## qsec         1.225886 2.161737e-04
+## am1          2.935837 4.671551e-02
+\end{verbatim}
+
+Since the model \texttt{back.bic} has the largest adjusted \(R^2 =\)
+0.834, the model including \texttt{wt}, \texttt{qsec}, and \texttt{am}
+has the most explanatory power for \texttt{mpg}. Under this model, a
+mamual transmission car, on average, has 2.936 miles per gallon more
+than an automatic transmission car, holding values of weights and 1/4
+mile time constant.
+
+We then fit four possible interaction models \texttt{fit.int},
+\texttt{fit.int.aq}, \texttt{fit.int.aw} and \texttt{fit.int.wq} to
+check if any interaction is needed to be in the model.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{fit.int <-}\StringTok{ }\KeywordTok{summary}\NormalTok{(}\KeywordTok{lm}\NormalTok{(mpg ~}\StringTok{ }\NormalTok{wt *}\StringTok{ }\NormalTok{qsec *}\StringTok{ }\NormalTok{am, }\DataTypeTok{data =} \NormalTok{mtcars))}
+\NormalTok{fit.int.aq <-}\StringTok{ }\KeywordTok{summary}\NormalTok{(}\KeywordTok{lm}\NormalTok{(mpg ~}\StringTok{ }\NormalTok{wt +}\StringTok{ }\NormalTok{qsec *}\StringTok{ }\NormalTok{am, }\DataTypeTok{data =} \NormalTok{mtcars))}
+\NormalTok{fit.int.aw <-}\StringTok{ }\KeywordTok{summary}\NormalTok{(}\KeywordTok{lm}\NormalTok{(mpg ~}\StringTok{ }\NormalTok{qsec +}\StringTok{ }\NormalTok{wt *}\StringTok{ }\NormalTok{am, }\DataTypeTok{data =} \NormalTok{mtcars))}
+\NormalTok{fit.int.wq <-}\StringTok{ }\KeywordTok{summary}\NormalTok{(}\KeywordTok{lm}\NormalTok{(mpg ~}\StringTok{ }\NormalTok{am +}\StringTok{ }\NormalTok{qsec *}\StringTok{ }\NormalTok{wt, }\DataTypeTok{data =} \NormalTok{mtcars))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##    int_Rsq int.aq_Rsq int.aw_Rsq int.wq_Rsq 
+##  0.8759496  0.8531624  0.8804219  0.8347545
+\end{verbatim}
+
+Since model \texttt{fit.int.aw} has the largest adjusted \(R^2 =\) 0.88,
+the model
+\textbf{\texttt{mpg = 9.723 + (1.017)qsec + (-2.937)wt + (14.079)am + (-4.141)wt*am}}
+is our final model. When \texttt{am = 0}, the slope of \texttt{wt} is
+-2.937 and the intercept is 9.723. When \texttt{am = 1}, the slope of
+\texttt{wt} is -7.078 and the intercept is 23.802. In term of
+uncertainty, the 95\% confidence interval for the coefficients are shown
+below.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{fit <-}\StringTok{ }\KeywordTok{lm}\NormalTok{(mpg ~}\StringTok{ }\NormalTok{qsec +}\StringTok{ }\NormalTok{wt *}\StringTok{ }\NormalTok{am, }\DataTypeTok{data =} \NormalTok{mtcars)}
+\KeywordTok{t}\NormalTok{(}\KeywordTok{confint}\NormalTok{(fit))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##        (Intercept)      qsec        wt       am1    wt:am1
+## 2.5 %    -2.380779 0.4998811 -4.303102  7.030875 -6.597032
+## 97.5 %   21.826884 1.5340661 -1.569960 21.127981 -1.685721
+\end{verbatim}
+
+\subsection{Residual Diagnostics}\label{residual-diagnostics}
+
+Some plots for residual diagnostics are shown in Figure 2. There is no
+particular pattern in residuals vs fitted, scale-location, and residuals
+vs leverage plots. For QQ-plot, it seems that the residual is a little
+bit right skewed, but it still can be seen as normal from Shapiro-Wilk
+normality test.
+
+We use \(2*k/n\) as a threshold for hat values, and there are four high
+leverage points, but according to \texttt{dfbeta()}, they are not so
+influential to our model.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{shapiro.test}\NormalTok{(fit$res)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+##  Shapiro-Wilk normality test
+## 
+## data:  fit$res
+## W = 0.9444, p-value = 0.1001
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{round}\NormalTok{(}\KeywordTok{hatvalues}\NormalTok{(fit)[}\KeywordTok{hatvalues}\NormalTok{(fit) >}\StringTok{ }\DecValTok{2}\NormalTok{*}\DecValTok{5}\NormalTok{/}\DecValTok{32}\NormalTok{], }\DecValTok{2}\NormalTok{) }\CommentTok{# high leverage}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##            Merc 230 Lincoln Continental        Lotus Europa 
+##                0.35                0.32                0.33 
+##       Maserati Bora 
+##                0.37
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{round}\NormalTok{(}\KeywordTok{dfbeta}\NormalTok{(fit)[}\KeywordTok{which}\NormalTok{(}\KeywordTok{hatvalues}\NormalTok{(fit) >}\StringTok{ }\DecValTok{2}\NormalTok{*}\DecValTok{5}\NormalTok{/}\DecValTok{32}\NormalTok{), ], }\DecValTok{2}\NormalTok{) }\CommentTok{# check influence }
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##                     (Intercept)  qsec    wt   am1 wt:am1
+## Merc 230                   1.53 -0.09  0.01  0.46  -0.19
+## Lincoln Continental        1.87 -0.03 -0.37 -1.14   0.30
+## Lotus Europa               0.12 -0.01  0.00  0.10  -0.04
+## Maserati Bora              0.38 -0.02 -0.01 -1.37   0.64
+\end{verbatim}
+
+In sum, our model fit the data quite well. Although there are some high
+leverage points, they does not affect the model much. We may use this
+model to do inference and prediction as long as we pay attention to
+those data points with careful explanation.
+
+\subsection{Appendix}\label{appendix}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics{project_files/figure-latex/unnamed-chunk-13-1.pdf}
+\caption{Decriptive Summary of Variables}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics{project_files/figure-latex/unnamed-chunk-14-1.pdf}
+\caption{Residual Diagnostics}
+\end{figure}
+
+\end{document}
